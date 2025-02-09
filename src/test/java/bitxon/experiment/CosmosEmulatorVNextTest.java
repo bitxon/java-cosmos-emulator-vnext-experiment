@@ -12,10 +12,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +29,8 @@ public class CosmosEmulatorVNextTest {
     @TempDir
     static File tempFolder;
 
-    static CosmosDBEmulatorVNextContainer cosmos = new CosmosDBEmulatorVNextContainer();
+    static CosmosDBEmulatorVNextContainer cosmos = new CosmosDBEmulatorVNextContainer()
+        .withStartupTimeout(Duration.ofSeconds(30));
 
     @BeforeAll
     public static void setup() throws Exception {
@@ -39,6 +43,12 @@ public class CosmosEmulatorVNextTest {
         KeyStore keyStore = cosmos.buildNewKeyStore();
         keyStore.store(Files.newOutputStream(keyStoreFile.toFile().toPath()), cosmos.getEmulatorKey().toCharArray());
         System.out.println("CosmosDb Container - Certificate Extracted");
+
+        var trustManagerFactory = TrustManagerFactory.getInstance("X509");
+        trustManagerFactory.init(keyStore);
+        var sslContext = SSLContext.getInstance("SSL");
+        sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+        SSLContext.setDefault(sslContext);
 
         System.setProperty("javax.net.ssl.trustStore", keyStoreFile.toString());
         System.setProperty("javax.net.ssl.trustStorePassword", cosmos.getEmulatorKey());

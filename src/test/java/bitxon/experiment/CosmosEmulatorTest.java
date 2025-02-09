@@ -13,10 +13,13 @@ import org.junit.jupiter.api.io.TempDir;
 import org.testcontainers.containers.CosmosDBEmulatorContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,7 +31,8 @@ public class CosmosEmulatorTest {
     static File tempFolder;
 
     static CosmosDBEmulatorContainer cosmos = new CosmosDBEmulatorContainer(
-        DockerImageName.parse("mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest"));
+        DockerImageName.parse("mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest"))
+        .withStartupTimeout(Duration.ofSeconds(30));
 
     @BeforeAll
     public static void setup() throws Exception {
@@ -37,6 +41,12 @@ public class CosmosEmulatorTest {
         Path keyStoreFile = new File(tempFolder, "azure-cosmos-emulator.keystore").toPath();
         KeyStore keyStore = cosmos.buildNewKeyStore();
         keyStore.store(Files.newOutputStream(keyStoreFile.toFile().toPath()), cosmos.getEmulatorKey().toCharArray());
+
+        var trustManagerFactory = TrustManagerFactory.getInstance("X509");
+        trustManagerFactory.init(keyStore);
+        var sslContext = SSLContext.getInstance("SSL");
+        sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+        SSLContext.setDefault(sslContext);
 
         System.setProperty("javax.net.ssl.trustStore", keyStoreFile.toString());
         System.setProperty("javax.net.ssl.trustStorePassword", cosmos.getEmulatorKey());
