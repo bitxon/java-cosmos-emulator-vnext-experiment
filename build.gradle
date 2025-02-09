@@ -33,3 +33,17 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+tasks.register('testClassic', Test) {
+    group 'verification'
+    useJUnitPlatform {
+        includeTags 'classic'
+    }
+}
+
+tasks.register('testVNext', Test) {
+    group 'verification'
+    useJUnitPlatform {
+        includeTags 'vnext'
+    }
+}

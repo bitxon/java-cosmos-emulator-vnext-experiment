@@ -16,6 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
+        action: [ testClassic, testVNext]
 
     runs-on: ${{ matrix.os }}
     permissions:
@@ -32,10 +33,10 @@ jobs:
           java-version: '21'
           distribution: 'adopt'
       - name: Build with Gradle
-        run: ./gradlew clean build
+        run: ./gradlew ${{ matrix.action }}
       - name: Publish Test Report
         if: always()
         uses: mikepenz/action-junit-report@v3
         with:
-          check_name: JUnit Test Report (${{ matrix.os }})
-          report_paths: '**/build/test-results/test/TEST-*.xml'
+          check_name: report (${{ matrix.os }}, ${{ matrix.action }})
+          report_paths: '**/build/test-results/${{ matrix.action }}/TEST-*.xml'
