@@ -18,6 +18,7 @@ repositories {
 dependencies {
     implementation platform('com.azure:azure-sdk-bom:1.2.31')
     implementation 'com.azure:azure-cosmos'
+    implementation 'ch.qos.logback:logback-classic:1.5.16'
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
