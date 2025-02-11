@@ -10,7 +10,7 @@ import java.security.cert.CertificateFactory;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 class KeyStoreVNextBuilder {
-    private static final String CERTIFICATE_PATH = "/scripts/certs/rootCA.crt";
+    private static final String CERTIFICATE_PATH = "/scripts/certs/domain.crt";
 
     static KeyStore buildByExtractingCertificate(GenericContainer<?> container, String keyStorePassword) {
         try {

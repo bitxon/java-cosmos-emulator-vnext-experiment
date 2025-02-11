@@ -54,7 +54,7 @@ public class CosmosEmulatorTest {
     }
 
     @Test
-    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    @Timeout(value = 20, unit = TimeUnit.SECONDS)
     public void test() {
         CosmosClient client = new CosmosClientBuilder()
             .endpoint(cosmos.getEmulatorEndpoint())
