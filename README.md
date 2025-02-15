@@ -1,19 +1,20 @@
-# CosmosDb VNext emulator & Java SDK
+# CosmosDb emulator (VNext) | Java SDK | Testcontainers
 
 ## Run container
  ```shell
-docker run --detach --name cosmosdb-vnext --publish 8081:8081 --publish 1234:1234 mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview --protocol https
+docker run --detach --name cosmosdb-vnext --publish 56001:56001 --publish 1234:1234 mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview --protocol https --port 56001
  ```
 
 ---
 ## Run Application
-1. Copy certificates (.crt) & (*.pem)
+1. Extract certificates (.crt) & (*.pem)
 ```shell
 docker cp cosmosdb-vnext:/scripts/certs/domain.crt .temp/domain.crt
 docker cp cosmosdb-vnext:/scripts/certs/rootCA.crt .temp/rootCA.crt
 docker cp cosmosdb-vnext:/root/cosmos-explorer/node_modules/.cache/webpack-dev-server/server.pem .temp/ui.pem
 ```
-2. Save to toolchain 
+
+2. Save to Java truststore
 ```shell
 keytool -importcert -alias cosmosdb-root -file .temp/rootCA.crt -trustcacerts -cacerts -storepass changeit -noprompt
 keytool -importcert -alias cosmosdb-domain -file .temp/domain.crt -trustcacerts -cacerts -storepass changeit -noprompt
@@ -35,7 +36,7 @@ keytool -delete -alias cosmosdb-domain -cacerts -storepass changeit -noprompt
 
 1. Download expected certificate
 ```shell
-openssl s_client -connect localhost:8081 -showcerts </dev/null | openssl x509 -outform PEM > .temp/db-downloaded.pem
+openssl s_client -connect localhost:56001 -showcerts </dev/null | openssl x509 -outform PEM > .temp/db-downloaded.pem
 openssl s_client -connect localhost:1234 -showcerts </dev/null | openssl x509 -outform PEM > .temp/ui-downloaded.pem
 ```
 
