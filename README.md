@@ -1,9 +1,11 @@
 # CosmosDb emulator (VNext) | Java SDK | Testcontainers
 
 ## Run container
- ```shell
-docker run --detach --name cosmosdb-vnext --publish 56001:56001 --publish 1234:1234 mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview --protocol https --port 56001
- ```
+```shell
+docker run --detach --name cosmosdb-vnext --publish 8081:8081 --publish 1234:1234 \
+  mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview \
+  --protocol https --port 8081 --explorer-protocol http --explorer-port 1234
+```
 
 ---
 ## Run Application
@@ -11,12 +13,13 @@ docker run --detach --name cosmosdb-vnext --publish 56001:56001 --publish 1234:1
 ```shell
 docker cp cosmosdb-vnext:/scripts/certs/domain.crt .temp/domain.crt
 docker cp cosmosdb-vnext:/scripts/certs/rootCA.crt .temp/rootCA.crt
-docker cp cosmosdb-vnext:/root/cosmos-explorer/node_modules/.cache/webpack-dev-server/server.pem .temp/ui.pem
 ```
 
 2. Save to Java truststore
 ```shell
+keytool -delete -alias cosmosdb-root -cacerts -storepass changeit -noprompt
 keytool -importcert -alias cosmosdb-root -file .temp/rootCA.crt -trustcacerts -cacerts -storepass changeit -noprompt
+keytool -delete -alias cosmosdb-domain -cacerts -storepass changeit -noprompt
 keytool -importcert -alias cosmosdb-domain -file .temp/domain.crt -trustcacerts -cacerts -storepass changeit -noprompt
 ```
 
@@ -25,28 +28,31 @@ keytool -importcert -alias cosmosdb-domain -file .temp/domain.crt -trustcacerts 
 ./gradlew run
 ```
 
-4. Cleanup
-```shell
-keytool -delete -alias cosmosdb-root -cacerts -storepass changeit -noprompt
-keytool -delete -alias cosmosdb-domain -cacerts -storepass changeit -noprompt
-```
+4. Open
+- [Explorer](http://localhost:1234/)
+- [DB List](https://localhost:8081/dbs)
 
 ---
 ## Play With Certificates
-
-1. Download expected certificate
+1. Copy Certificates and keys
 ```shell
-openssl s_client -connect localhost:56001 -showcerts </dev/null | openssl x509 -outform PEM > .temp/db-downloaded.pem
-openssl s_client -connect localhost:1234 -showcerts </dev/null | openssl x509 -outform PEM > .temp/ui-downloaded.pem
+docker cp cosmosdb-vnext:/scripts/certs/domain.crt .temp/domain.crt
+docker cp cosmosdb-vnext:/scripts/certs/domain.key .temp/domain.key
+docker cp cosmosdb-vnext:/scripts/certs/rootCA.crt .temp/rootCA.crt
+docker cp cosmosdb-vnext:/scripts/certs/rootCA.key .temp/rootCA.key
 ```
 
-2. Verify certificate 
+2. Download expected certificate
+```shell
+openssl s_client -connect localhost:8081 -showcerts </dev/null | openssl x509 -outform PEM > .temp/db-downloaded.pem
+```
+
+3. Verify certificate 
 ```shell
 openssl verify -CAfile .temp/rootCA.crt .temp/db-downloaded.pem
-openssl verify -CAfile .temp/domain.crt .temp/db-downloaded.pem
 ```
 
-3. Compare fingerprint
+4. Compare fingerprint
 ```shell
 openssl x509 -in .temp/rootCA.crt -noout -fingerprint
 openssl x509 -in .temp/domain.crt -noout -fingerprint
@@ -62,3 +68,7 @@ find / -type f \( -iname "*.crt" -o -iname "*.pem" \) 2>/dev/null
 find / -type f \( -iname "*.crt" -o -iname "*.pem" \) -exec grep -H "BEGIN CERTIFICATE" {} +
 find / -type f \( -iname "*.crt" -o -iname "*.pem" \)  2>/dev/null -exec grep -H "MIIEIzCCAwugAwIBAgIUSRjST9HfaxF8S2zMPAFM33xNIRMwDQYJKoZIhvcNAQEL" {} +
 ```
+
+## Useful Links
+
+https://learn.microsoft.com/en-us/azure/cosmos-db/emulator-linux
