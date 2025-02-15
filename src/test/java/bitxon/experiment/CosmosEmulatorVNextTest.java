@@ -12,8 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,38 +32,25 @@ public class CosmosEmulatorVNextTest {
 
     @BeforeAll
     public static void setup() throws Exception {
-        System.out.println("CosmosDb Container - Starting");
         cosmos.start();
-        System.out.println("CosmosDb Container - Ready");
-
 
         Path keyStoreFile = new File(tempFolder, "azure-cosmos-emulator.keystore").toPath();
         KeyStore keyStore = cosmos.buildNewKeyStore();
         keyStore.store(Files.newOutputStream(keyStoreFile.toFile().toPath()), cosmos.getEmulatorKey().toCharArray());
-        System.out.println("CosmosDb Container - Certificate Extracted");
-
-        var trustManagerFactory = TrustManagerFactory.getInstance("X509");
-        trustManagerFactory.init(keyStore);
-        var sslContext = SSLContext.getInstance("SSL");
-        sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
-        SSLContext.setDefault(sslContext);
 
         System.setProperty("javax.net.ssl.trustStore", keyStoreFile.toString());
         System.setProperty("javax.net.ssl.trustStorePassword", cosmos.getEmulatorKey());
         System.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
-        System.out.println("CosmosDb Container - TrustStore configured");
     }
 
     @Test
     @Timeout(value = 20, unit = TimeUnit.SECONDS)
     public void test() {
-        System.out.println("CosmosDb Client - Initializing");
         CosmosClient client = new CosmosClientBuilder()
             .gatewayMode()
             .endpoint(cosmos.getEmulatorEndpoint())
             .credential(new AzureKeyCredential(cosmos.getEmulatorKey()))
             .buildClient();
-        System.out.println("CosmosDb Client - Ready");
 
         CosmosDatabaseResponse databaseResponse = client.createDatabaseIfNotExists("Azure");
         assertThat(databaseResponse.getStatusCode()).isIn(200, 201); // TODO why 200 on windows ?
