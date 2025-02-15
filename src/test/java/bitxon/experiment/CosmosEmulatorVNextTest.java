@@ -4,8 +4,8 @@ import bitxon.experiment.testcontainer.CosmosDBEmulatorVNextContainer;
 import com.azure.core.credential.AzureKeyCredential;
 import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.CosmosClientBuilder;
-import com.azure.cosmos.models.CosmosContainerResponse;
-import com.azure.cosmos.models.CosmosDatabaseResponse;
+import com.azure.cosmos.models.CosmosItemResponse;
+import com.azure.cosmos.models.PartitionKey;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("vnext")
 public class CosmosEmulatorVNextTest {
+    private static final String DATABASE = "Clinic";
+    private static final String CONTAINER = "Patients";
 
     @TempDir
     static File tempFolder;
@@ -52,12 +54,20 @@ public class CosmosEmulatorVNextTest {
             .credential(new AzureKeyCredential(cosmos.getEmulatorKey()))
             .buildClient();
 
-        CosmosDatabaseResponse databaseResponse = client.createDatabaseIfNotExists("Azure");
-        assertThat(databaseResponse.getStatusCode()).isIn(200, 201); // TODO why 200 on windows ?
-        CosmosContainerResponse containerResponse = client.getDatabase("Azure")
-            .createContainerIfNotExists("ServiceContainer", "/name");
-        assertThat(containerResponse.getStatusCode()).isIn(200, 201); // TODO why 200 on windows ?
+        // 1️⃣ Create Database
+        var databaseResponse = client.createDatabaseIfNotExists(DATABASE);
+        assertThat(databaseResponse.getStatusCode()).as("DB created").isEqualTo(201);
+        // 2️⃣ Create Container
+        var containerResponse = client.getDatabase(DATABASE).createContainerIfNotExists(CONTAINER, "/name");
+        assertThat(containerResponse.getStatusCode()).as("Container created").isEqualTo(201);
+        // 3️⃣ Create Item
+        var patient = new Patient("10001", "John Doe", 27);
+        var itemCreateResponse = client.getDatabase(DATABASE).getContainer(CONTAINER).createItem(patient);
+        assertThat(itemCreateResponse.getStatusCode()).as("Item created").isEqualTo(201);
+        // 4️⃣ Read Item
+        var itemReadResponse = client.getDatabase(DATABASE).getContainer(CONTAINER)
+            .readItem(patient.id(), new PartitionKey(patient.name()), Patient.class);
+        assertThat(itemReadResponse).extracting(CosmosItemResponse::getItem).as("Item read").isEqualTo(patient);
     }
 
 }
-

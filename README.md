@@ -30,7 +30,9 @@ keytool -importcert -alias cosmosdb-domain -file .temp/domain.crt -trustcacerts 
 
 4. Open
 - [Explorer](http://localhost:1234/)
-- [DB List](https://localhost:8081/dbs)
+- [Cosmos Details](https://localhost:8081)
+- [Databases List](https://localhost:8081/dbs)
+- [Collections List](https://localhost:8081/dbs/Clinic/colls)
 
 ---
 ## Play With Certificates
