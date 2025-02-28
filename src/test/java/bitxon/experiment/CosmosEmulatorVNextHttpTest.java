@@ -1,18 +1,12 @@
 package bitxon.experiment;
 
+import bitxon.experiment.testcontainer.CosmosDBEmulatorVNextContainer;
 import com.azure.core.credential.AzureKeyCredential;
 import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.CosmosClientBuilder;
 import com.azure.cosmos.models.*;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.io.TempDir;
-import org.testcontainers.containers.CosmosDBEmulatorContainer;
-import org.testcontainers.utility.DockerImageName;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.KeyStore;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -20,36 +14,26 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Tag("classic")
-public class CosmosEmulatorClassicTest {
+@Tag("vnext")
+@DisplayName("Cosmos Emulator VNext HTTP Test")
+public class CosmosEmulatorVNextHttpTest {
     private static final String DATABASE = "Clinic";
     private static final String CONTAINER = "Patients";
 
-    @TempDir
-    static File tempFolder;
-
-    static CosmosDBEmulatorContainer cosmos = new CosmosDBEmulatorContainer(
-        DockerImageName.parse("mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest"))
-        .withStartupTimeout(Duration.ofSeconds(30));
+    static CosmosDBEmulatorVNextContainer cosmos = new CosmosDBEmulatorVNextContainer()
+        .withStartupTimeout(Duration.ofSeconds(30))
+        .withProtocol("http");
 
     @BeforeAll
     public static void setup() throws Exception {
         cosmos.start();
-
-        Path keyStoreFile = new File(tempFolder, "azure-cosmos-emulator.keystore").toPath();
-        KeyStore keyStore = cosmos.buildNewKeyStore();
-        keyStore.store(Files.newOutputStream(keyStoreFile.toFile().toPath()), cosmos.getEmulatorKey().toCharArray());
-
-        System.setProperty("javax.net.ssl.trustStore", keyStoreFile.toString());
-        System.setProperty("javax.net.ssl.trustStorePassword", cosmos.getEmulatorKey());
-        System.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
+        System.setProperty("COSMOS.HTTP_CONNECTION_WITHOUT_TLS_ALLOWED", "true");
     }
+
 
     @AfterAll
     public static void tearDown() {
-        System.clearProperty("javax.net.ssl.trustStoreType");
-        System.clearProperty("javax.net.ssl.trustStorePassword");
-        System.clearProperty("javax.net.ssl.trustStore");
+        System.clearProperty("COSMOS.HTTP_CONNECTION_WITHOUT_TLS_ALLOWED");
         cosmos.stop();
     }
 
@@ -94,4 +78,5 @@ public class CosmosEmulatorClassicTest {
         var queryResults = container.queryItems(query, options, Patient.class).stream().toList();
         assertThat(queryResults).as("Query Items").containsExactlyInAnyOrder(patient0, patient1);
     }
+
 }

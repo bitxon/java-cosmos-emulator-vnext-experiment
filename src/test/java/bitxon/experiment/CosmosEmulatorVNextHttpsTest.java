@@ -1,13 +1,12 @@
 package bitxon.experiment;
 
+import bitxon.experiment.testcontainer.CosmosDBEmulatorVNextContainer;
 import com.azure.core.credential.AzureKeyCredential;
 import com.azure.cosmos.CosmosClient;
 import com.azure.cosmos.CosmosClientBuilder;
 import com.azure.cosmos.models.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
-import org.testcontainers.containers.CosmosDBEmulatorContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -20,17 +19,17 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Tag("classic")
-public class CosmosEmulatorClassicTest {
+@Tag("vnext")
+public class CosmosEmulatorVNextHttpsTest {
     private static final String DATABASE = "Clinic";
     private static final String CONTAINER = "Patients";
 
     @TempDir
     static File tempFolder;
 
-    static CosmosDBEmulatorContainer cosmos = new CosmosDBEmulatorContainer(
-        DockerImageName.parse("mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest"))
-        .withStartupTimeout(Duration.ofSeconds(30));
+    static CosmosDBEmulatorVNextContainer cosmos = new CosmosDBEmulatorVNextContainer()
+        .withStartupTimeout(Duration.ofSeconds(30))
+        .withProtocol("https");
 
     @BeforeAll
     public static void setup() throws Exception {
@@ -94,4 +93,5 @@ public class CosmosEmulatorClassicTest {
         var queryResults = container.queryItems(query, options, Patient.class).stream().toList();
         assertThat(queryResults).as("Query Items").containsExactlyInAnyOrder(patient0, patient1);
     }
+
 }

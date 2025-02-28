@@ -10,10 +10,12 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.security.KeyStore;
 import java.util.Map;
+import java.util.Objects;
 
 public class CosmosDBEmulatorVNextContainer extends GenericContainer<CosmosDBEmulatorVNextContainer> {
     private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview");
     private final int port;
+    private String protocol = "http";
 
     public CosmosDBEmulatorVNextContainer() {
         this(DEFAULT_IMAGE_NAME);
@@ -27,7 +29,7 @@ public class CosmosDBEmulatorVNextContainer extends GenericContainer<CosmosDBEmu
         this.withExposedPorts(port);
         this.withEnv(Map.of(
             "PORT", String.valueOf(port),
-            "PROTOCOL", "https",
+            "PROTOCOL", protocol,
             "ENABLE_EXPLORER", "false",
             "LOG_LEVEL", "trace"
         ));
@@ -36,6 +38,11 @@ public class CosmosDBEmulatorVNextContainer extends GenericContainer<CosmosDBEmu
             new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(port), new ExposedPort(port)))
         ));
         this.waitingFor(Wait.forLogMessage(".*Now listening on.*\\n", 1));
+    }
+
+    public CosmosDBEmulatorVNextContainer withProtocol(String protocol) {
+        this.protocol = Objects.requireNonNull(protocol, "Protocol must not be null");
+        return withEnv("PROTOCOL", protocol);
     }
 
     public KeyStore buildNewKeyStore() {
@@ -47,7 +54,7 @@ public class CosmosDBEmulatorVNextContainer extends GenericContainer<CosmosDBEmu
     }
 
     public String getEmulatorEndpoint() {
-        return "https://%s:%d".formatted(getHost(), getMappedPort(port));
+        return "%s://%s:%d".formatted(protocol, getHost(), getMappedPort(port));
     }
 
     private static int getRandomAvailablePort() {
