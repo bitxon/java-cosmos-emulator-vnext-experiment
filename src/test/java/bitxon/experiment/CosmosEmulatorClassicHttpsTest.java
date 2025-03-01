@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("classic")
-public class CosmosEmulatorClassicTest {
+public class CosmosEmulatorClassicHttpsTest {
     private static final String DATABASE = "Clinic";
     private static final String CONTAINER = "Patients";
 

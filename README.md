@@ -1,5 +1,13 @@
 # CosmosDb emulator (VNext) | Java SDK | Testcontainers
 
+## Junit5 Tests with Testcontainers
+### VNext Docker Image
+- [CosmosEmulatorVNextHttpTest](./src/test/java/bitxon/experiment/CosmosEmulatorVNextHttpTest.java)
+- [CosmosEmulatorVNextHttpsTest](./src/test/java/bitxon/experiment/CosmosEmulatorVNextHttpsTest.java)
+- [CosmosEmulatorVNextHttpsNoCertValidationTest](./src/test/java/bitxon/experiment/CosmosEmulatorVNextHttpsNoCertValidationTest.java)
+### Old Docker Image
+- [CosmosEmulatorClassicHttpsTest](./src/test/java/bitxon/experiment/CosmosEmulatorClassicHttpsTest.java)
+
 ## Run container
 ```shell
 docker run --detach --name cosmosdb-vnext --publish 8081:8081 --publish 1234:1234 \
