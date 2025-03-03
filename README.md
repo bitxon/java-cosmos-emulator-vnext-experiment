@@ -7,6 +7,7 @@
 - [CosmosEmulatorVNextHttpsNoCertValidationTest](./src/test/java/bitxon/experiment/CosmosEmulatorVNextHttpsNoCertValidationTest.java)
 ### Old Docker Image
 - [CosmosEmulatorClassicHttpsTest](./src/test/java/bitxon/experiment/CosmosEmulatorClassicHttpsTest.java)
+- [CosmosEmulatorClassicHttpsNoCertValidationTest](./src/test/java/bitxon/experiment/CosmosEmulatorClassicHttpsNoCertValidationTest.java)
 
 ## Run container
 ```shell
